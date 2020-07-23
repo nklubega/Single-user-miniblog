@@ -16,6 +16,7 @@ app.config.update(
     PASSWORD = 'admin123'
 )
 
+                        ######DATABASE SECTION######
 #connection to the database
 #uses SQLite database
 def connect_db():
@@ -24,6 +25,7 @@ def connect_db():
     rv.row_factory = sqlite3.Row 
     return rv
 
+#initializing the database
 def init_db():
     db = get_db()
 
@@ -39,17 +41,22 @@ def initdb_command():
     init_db()
     print('Initialized the database')
 
+#opening a new databse connection
 def get_db():
     if not hasattr(g, 'sqlite_db'):
         g.sqlite_db = connect_db()
     return g.sqlite_db
 
+#disconnecting from the database
 @app.teardown_appcontext
 def close_db(error):
     if hasattr(g, 'sqlite_db'):
         g.sqlite_db.close()
     return "Error"
 
+                            ########VIEW FUNCTIONS########
+
+#passes the posts to show_entries.html
 @app.route('/') 
 def show_entries(): 
     db = get_db() 
@@ -57,7 +64,7 @@ def show_entries():
     entries = cur.fetchall() 
     return render_template('show_entries.html', entries=entries)
 
-
+#allows the user to add a post
 @app.route('/add', methods=['POST'])
 def add_entry():
     if not session.get('logged_in'):
@@ -66,10 +73,10 @@ def add_entry():
     db.execute('insert into entries (title, text) values (?, ?)',
     [request.form['title'], request.form['text']])
     db.commit()
-    flash('New entry was succesfully posted')
+    flash('Post was uploaded')
     return redirect(url_for('show_entries'))
 
-
+#login function
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
@@ -80,11 +87,11 @@ def login():
             error = 'Invalid password'
         else:
             session['logged_in'] = True
-            flash('You are logged in')
+            flash('Create new post')
             return redirect(url_for('show_entries'))
     return render_template('login.html', error=error)
 
-
+#logout function
 @app.route('/logout')
 def logout():
     session.pop('logged_in', None)
